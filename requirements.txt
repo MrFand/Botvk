@@ -1,0 +1,4 @@
+vk_api
+pyowm
+requests
+bs4
