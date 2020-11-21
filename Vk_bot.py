@@ -18,7 +18,7 @@ class bot:
 		self.USERNAME = self.get_name_from_vk(user_id)['name']
 		self.COMMANDS = ['Привет', 'Погода', 'Время', 'Пока', 'Команды', 'Статистика', 'начать', 'Висилица']
 		self.CITY = self.get_user_city(user_id)
-		self.alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+		self.alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
 	def random_word(self):
 		word = config.words[random.randint(0, len(config.words))]
 		return word
@@ -199,11 +199,15 @@ class bot:
 		
 		if message in self.alphabet:
 			user_data = self.sql_select_user(user_id)
+			if user_data == 'NULL':
+				self.sql_new_user(user_id)
+				user_data = self.sql_select_user(user_id)
 			word = user_data[2]
 			blank = user_data[3]
 			right_letter = user_data[4]
 			letter = user_data[5]
 			error = int(user_data[6])
+			message = message.lower()
 			if message in letter:
 				return 'Вы уже вводили эту букву!'
 			else:
