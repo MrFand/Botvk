@@ -200,7 +200,7 @@ class bot:
 		if message in self.alphabet:
 			user_data = self.sql_select_user(user_id)
 			if user_data == 'NULL':
-				self.sql_new_user(user_id)Ф
+				self.sql_new_user(user_id)
 				user_data = self.sql_select_user(user_id)
 			word = user_data[2]
 			blank = user_data[3]
