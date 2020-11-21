@@ -16,7 +16,7 @@ class bot:
 	def __init__(self, user_id):
 		self.USER_ID = user_id
 		self.USERNAME = self.get_name_from_vk(user_id)['name']
-		self.COMMANDS = ['Привет', 'Погода', 'Время', 'Пока', 'Команды', 'Статистика', 'начать', 'Висилица']
+		self.COMMANDS = ['Привет', 'Погода', 'Время', 'Пока', 'Команды', 'Статистика', 'начать', 'Виселица']
 		self.CITY = self.get_user_city(user_id)
 		self.alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
 	def random_word(self):
@@ -164,7 +164,7 @@ class bot:
 			elif message.upper() == self.COMMANDS[3].upper():
 				return f"Прощай, {self.USERNAME} ("
 			elif message.upper() == self.COMMANDS[4].upper():
-				return 'Вот мои команды: "Погода", "Время", "Статистика", "Висилица".'
+				return 'Вот мои команды: "Погода", "Время", "Статистика", "Виселица".'
 			elif message.upper() == self.COMMANDS[5].upper():
 				return self.get_covid_statistic()
 			elif message.upper() == self.COMMANDS[6].upper():
@@ -200,7 +200,7 @@ class bot:
 		if message in self.alphabet:
 			user_data = self.sql_select_user(user_id)
 			if user_data == 'NULL':
-				self.sql_new_user(user_id)
+				self.sql_new_user(user_id)Ф
 				user_data = self.sql_select_user(user_id)
 			word = user_data[2]
 			blank = user_data[3]
@@ -223,7 +223,7 @@ class bot:
 					error += 1
 					letter += message
 					self.sql_update(user_id, word, blank, right_letter, letter, error)
-					answer = '''Буква ''' + message + ''' нет в слове!
+					answer = '''Буквы ''' + message + ''' нет в слове!
 					слово:''' + blank +''' 
 					''' + config.vis[len(config.vis) - 1 - error]
 			if word == blank:
@@ -232,7 +232,7 @@ class bot:
 				right_letter = ''
 				letter = ''
 				error = 0
-				answer = 'Вы победили! Для повторной игры напишите "Висилица"'
+				answer = 'Вы победили! Для повторной игры напишите "Виселица"'
 				self.sql_update(user_id, word, blank, right_letter, letter, error)
 				self.sql_update_mode(user_id, 0)
 			if error > len(config.vis) - 2:
