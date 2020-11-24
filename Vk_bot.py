@@ -11,6 +11,7 @@ import pyowm
 import requests
 import datetime
 import random
+
 class bot:
 	
 	def __init__(self, user_id):
@@ -68,6 +69,7 @@ class bot:
 		connection.close()
 		print('data = ' + str(data))
 		return data
+
 	def get_name_from_vk(self, user_id):
 		request = requests.get('https://vk.com/id' + str(user_id))
 		bs = bs4.BeautifulSoup(request.text, "html.parser")
@@ -80,6 +82,7 @@ class bot:
 		'female': female[0]
 		}
 		return inicials
+
 	def sql_update_word(self, user_id):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
@@ -98,6 +101,7 @@ class bot:
 		cursorObj.execute('UPDATE employees SET error = ? WHERE user_id = ?', data)
 		connection.commit()		
 		connection.close()
+
 	def sql_update_mode(self, user_id, mode):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
@@ -105,6 +109,7 @@ class bot:
 		cursorObj.execute('UPDATE employees SET mode = ? WHERE user_id = ?', data)
 		connection.commit()
 		connection.close()
+
 	def sql_update(self, user_id, word, blank, right_letter, letter, error):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
@@ -164,7 +169,7 @@ class bot:
 			elif message.upper() == self.COMMANDS[3].upper():
 				return f"Прощай, {self.USERNAME} ("
 			elif message.upper() == self.COMMANDS[4].upper():
-				return 'Вот мои команды: "Погода", "Время", "Статистика", "Виселица".'
+				return 'Вот мои команды:\n "Погода": показывает погоду в вашем городе,\n "Статистика": Выводит статистику заболеваемости короновируса в РФ,\n "Виселица": Мини-игра угадай слово.'
 			elif message.upper() == self.COMMANDS[5].upper():
 				return self.get_covid_statistic()
 			elif message.upper() == self.COMMANDS[6].upper():
@@ -188,6 +193,7 @@ class bot:
 				if word[i] in right_letter:
 					blank = blank[:i] + word[i] + blank[i+1:]
 		return blank
+
 	def start_game(self, user_id):
 		user_data = self.sql_select_user(self.USER_ID)
 		message = '''Игра начинается:
@@ -195,6 +201,7 @@ class bot:
 		Слово: ''' + str(user_data[3]) + '''
 		Ваша буква:'''
 		return message
+
 	def game(self, user_id, message):
 		
 		if message in self.alphabet:
@@ -265,6 +272,7 @@ class bot:
 	
 		
 		return answer
+
 	def clear_tags_for_str(self, line):
 		not_skip = True
 		result = ''
@@ -290,6 +298,7 @@ class bot:
 			return city[1]
 		except:
 			return 'error'
+
 	def getWeather(self, place):
 		try:
 			owm = pyowm.OWM(config.OWM_TOKEN, language = 'ru')
@@ -345,6 +354,7 @@ class bot:
 			return weather
 		except:
 			return 'Произошла ошибка или у вас скрыт город. Пожалуйста для уточнения города напишите "Погода город"(город напишите в иминительном подеже)"!'
+	
 	def get_covid_statistic(self):
 		request = requests.get('https://стопкоронавирус.рф')
 		bs = bs4.BeautifulSoup(request.text, "html.parser")
