@@ -19,11 +19,80 @@ class bot:
 		self.USERNAME = self.get_name_from_vk(user_id)['name']
 		self.COMMANDS = ['Привет', 'Погода', 'Время', 'Пока', 'Команды', 'Статистика', 'начать', 'Виселица']
 		self.CITY = self.get_user_city(user_id)
+		
 		self.alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
 	def random_word(self):
 		word = config.words[random.randint(0, len(config.words))]
 		return word
+	def get_letter(self, user_id):
+		user_data = self.sql_select_user(user_id)
+		return user_data[5]
+	def get_right_letter(self, user_id):
+		user_data = self.sql_select_user(user_id)
+		return user_data[4]	
+	def Get_color(self, letter, user_id):
+		letters = self.get_letter(user_id)
+		right_letters = self.get_right_letter(user_id)
+		if letter.lower() in right_letters:
+			return VkKeyboardColor.POSITIVE
+		elif letter.lower() in letters:
+			return VkKeyboardColor.NEGATIVE
+		else:
+			return VkKeyboardColor.PRIMARY
+	def keyboard(self, user_id):
+		if self.get_mode(user_id) == 0:
+			keyboard = VkKeyboard(one_time=True)
+			keyboard.add_button('Погода', color=VkKeyboardColor.POSITIVE)
+			keyboard.add_button('Статистика', color=VkKeyboardColor.POSITIVE)
+			keyboard.add_line()
+			keyboard.add_button('Виселица', color=VkKeyboardColor.NEGATIVE)
+		if self.get_mode(user_id) == 1:
+			keyboard = VkKeyboard(one_time=True)
+			keyboard.add_button('А', color=self.Get_color('А', user_id))
+			keyboard.add_button('Б', color=self.Get_color('Б', user_id))
+			keyboard.add_button('В', color=self.Get_color('В', user_id))
+			keyboard.add_button('Г', color=self.Get_color('Г', user_id))
+			keyboard.add_button('Д', color=self.Get_color('Д', user_id))
+			keyboard.add_line()
+			keyboard.add_button('Е', color=self.Get_color('Е', user_id))
+			keyboard.add_button('Ё', color=self.Get_color('Ё', user_id))
+			keyboard.add_button('Ж', color=self.Get_color('Ж', user_id))
+			keyboard.add_button('З', color=self.Get_color('З', user_id))
+			keyboard.add_button('И', color=self.Get_color('И', user_id))
+			keyboard.add_line()
+			keyboard.add_button('Й', color=self.Get_color('Й', user_id))
+			keyboard.add_button('К', color=self.Get_color('К', user_id))
+			keyboard.add_button('Л', color=self.Get_color('Л', user_id))
+			keyboard.add_button('М', color=self.Get_color('М', user_id))
+			keyboard.add_button('Н', color=self.Get_color('Н', user_id))
+			keyboard.add_line()
+			keyboard.add_button('О', color=self.Get_color('О', user_id))
+			keyboard.add_button('П', color=self.Get_color('П', user_id))
+			keyboard.add_button('Р', color=self.Get_color('Р', user_id))
+			keyboard.add_button('С', color=self.Get_color('С', user_id))
+			keyboard.add_button('Т', color=self.Get_color('Т', user_id))
+			keyboard.add_line()
+			keyboard.add_button('У', color=self.Get_color('У', user_id))
+			keyboard.add_button('Ф', color=self.Get_color('Ф', user_id))
+			keyboard.add_button('Х', color=self.Get_color('Х', user_id))
+			keyboard.add_button('Ц', color=self.Get_color('Ц', user_id))
+			keyboard.add_button('Ч', color=self.Get_color('Ч', user_id))
+			keyboard.add_line()
+			keyboard.add_button('Ш', color=self.Get_color('Ш', user_id))
+			keyboard.add_button('Щ', color=self.Get_color('Щ', user_id))
+			keyboard.add_button('Ъ', color=self.Get_color('Ъ', user_id))
+			keyboard.add_button('Ы', color=self.Get_color('Ы', user_id))
+			keyboard.add_button('Ь', color=self.Get_color('Ь', user_id))
+			keyboard.add_line()
+			keyboard.add_button('Э', color=self.Get_color('Э', user_id))
+			keyboard.add_button('Ю', color=self.Get_color('Ю', user_id))
+			keyboard.add_button('Я', color=self.Get_color('Я', user_id))
+			keyboard.add_line()
+			keyboard.add_button('Меню', color=VkKeyboardColor.NEGATIVE)
 
+
+		keyboard = keyboard.get_keyboard()
+		return keyboard
 	def sql_connection(self):
 		try:
 
@@ -44,7 +113,12 @@ class bot:
 		except:
 
 		    print('Error')
-
+	def get_mode(self, user_id):
+		user_data = self.sql_select_user(user_id)
+		if user_data == 'NULL':
+			self.sql_new_user(user_id)
+		user_data = self.sql_select_user(user_id)
+		return user_data[1]
 	def sql_new_user(self, user_id):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
