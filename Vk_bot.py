@@ -96,6 +96,8 @@ class bot:
 			keyboard.add_button('Ю', color=self.Get_color('Ю', user_id))
 			keyboard.add_button('Я', color=self.Get_color('Я', user_id))
 			keyboard.add_line()
+			keyboard.add_button('Как играть?', color = VkKeyboardColor.POSITIVE)
+			keyboard.add_line()
 			keyboard.add_button('Меню', color=VkKeyboardColor.NEGATIVE)
 
 		# сборка и возвращение клавиатуры
@@ -341,7 +343,7 @@ class bot:
 				self.sql_update(user_id, word, blank, right_letter, letter, error)
 				self.sql_update_mode(user_id, 0)
 			
-		elif message.upper() == 'КАК ИГРАТЬ':
+		elif message.upper() == 'КАК ИГРАТЬ?':
 			return '''Ваша задача угадать слово за определённое колличество попыток.
 			Для этого вы должны выбрать букву и попытаться отгадать слово, либо написать слово целиком.'''
 
