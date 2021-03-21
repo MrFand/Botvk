@@ -367,7 +367,8 @@ class bot:
 					right_letter = ''
 					letter = ''
 					error = 0
-					answer = 'Вы победили! Для повторной игры напишите "Виселица"'
+					answer = '''Вы победили😃😃!
+					Для повторной игры напишите "Виселица"'''
 					self.sql_update(user_id, word, blank, right_letter, letter, error)
 					self.sql_update_mode(user_id, 0)
 					return answer
