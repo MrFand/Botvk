@@ -13,7 +13,7 @@ import datetime
 import random
 
 class bot:
-	
+	# Инициализация
 	def __init__(self, user_id):
 		self.USER_ID = user_id
 		self.USERNAME = self.get_name_from_vk(user_id)['name']
@@ -21,31 +21,39 @@ class bot:
 		self.CITY = self.get_user_city(user_id)
 		
 		self.alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
+	# Получение рандомного слова из конфиг файла
 	def random_word(self):
 		word = config.words[random.randint(0, len(config.words))]
 		return word
+	# Получаем буквы, которые вводил пользователь из бд
 	def get_letter(self, user_id):
 		user_data = self.sql_select_user(user_id)
 		return user_data[5]
+	#  Получаем правильные буквы, которые вводил пользователь из бд
 	def get_right_letter(self, user_id):
 		user_data = self.sql_select_user(user_id)
 		return user_data[4]	
+	# Получаем цвет кнопки клавиатуры
 	def Get_color(self, letter, user_id):
+		# Получаем данные из бд
 		letters = self.get_letter(user_id)
 		right_letters = self.get_right_letter(user_id)
-		if letter.lower() in right_letters:
+		if letter.lower() in right_letters: #Если буква есть в слове
 			return VkKeyboardColor.POSITIVE
-		elif letter.lower() in letters:
+		elif letter.lower() in letters:#Если быквы нет в слове
 			return VkKeyboardColor.NEGATIVE
-		else:
+		else:#остальные буквы
 			return VkKeyboardColor.PRIMARY
+	# Создаём клавиатуру
 	def keyboard(self, user_id):
+		# Клавиатура режима меню
 		if self.get_mode(user_id) == 0:
 			keyboard = VkKeyboard(one_time=True)
 			keyboard.add_button('Погода', color=VkKeyboardColor.POSITIVE)
 			keyboard.add_button('Статистика', color=VkKeyboardColor.POSITIVE)
 			keyboard.add_line()
 			keyboard.add_button('Виселица', color=VkKeyboardColor.NEGATIVE)
+		# Клавиатура режима игры виселица
 		if self.get_mode(user_id) == 1:
 			keyboard = VkKeyboard(one_time=True)
 			keyboard.add_button('А', color=self.Get_color('А', user_id))
@@ -90,9 +98,10 @@ class bot:
 			keyboard.add_line()
 			keyboard.add_button('Меню', color=VkKeyboardColor.NEGATIVE)
 
-
+		# сборка и возвращение клавиатуры
 		keyboard = keyboard.get_keyboard()
 		return keyboard
+	# Создание бд
 	def sql_connection(self):
 		try:
 
@@ -113,12 +122,14 @@ class bot:
 		except:
 
 		    print('Error')
+	# Получение режима пользователея из бд
 	def get_mode(self, user_id):
 		user_data = self.sql_select_user(user_id)
 		if user_data == 'NULL':
 			self.sql_new_user(user_id)
 		user_data = self.sql_select_user(user_id)
 		return user_data[1]
+	# Регистрация нового пользователя
 	def sql_new_user(self, user_id):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
@@ -127,7 +138,7 @@ class bot:
 			VALUES(?, ?, ?, ?, ?, ?, ?)', data)
 		connection.commit()
 		connection.close()
-
+	# Выборка данных пользователя из бд
 	def sql_select_user(self, user_id):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
@@ -143,7 +154,7 @@ class bot:
 		connection.close()
 		print('data = ' + str(data))
 		return data
-
+	# Парсинг имени с сайта вк
 	def get_name_from_vk(self, user_id):
 		request = requests.get('https://vk.com/id' + str(user_id))
 		bs = bs4.BeautifulSoup(request.text, "html.parser")
@@ -156,7 +167,7 @@ class bot:
 		'female': female[0]
 		}
 		return inicials
-
+	# Обновление слова пользователя в бд
 	def sql_update_word(self, user_id):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
@@ -175,7 +186,7 @@ class bot:
 		cursorObj.execute('UPDATE employees SET error = ? WHERE user_id = ?', data)
 		connection.commit()		
 		connection.close()
-
+	# Обновления режима пользователя в бд
 	def sql_update_mode(self, user_id, mode):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
@@ -183,7 +194,7 @@ class bot:
 		cursorObj.execute('UPDATE employees SET mode = ? WHERE user_id = ?', data)
 		connection.commit()
 		connection.close()
-
+	# Обновления данных пользователя в  бд
 	def sql_update(self, user_id, word, blank, right_letter, letter, error):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
@@ -204,7 +215,7 @@ class bot:
 		connection.commit()
 		print('1')
 		connection.close()
-
+	# Выбор ответа на сообщение 
 	def new_message(self, message):
 		user_data = self.sql_select_user(self.USER_ID)
 		if user_data[1] == 0 or user_data == 'NULL':
@@ -261,21 +272,21 @@ class bot:
 				return 'Я не знаю такой команды. Чтобы узнать мои способности напиши "команды"!'
 		else:
 			return self.game(self.USER_ID, message)
-			
+	# Замена * на правильные буквы
 	def blank(self, word, right_letter, blank):
 		for i in range(len(word)):
 				if word[i] in right_letter:
 					blank = blank[:i] + word[i] + blank[i+1:]
 		return blank
-
+	# Начало игры
 	def start_game(self, user_id):
 		user_data = self.sql_select_user(self.USER_ID)
-		message = '''Игра начинается:
+		message = '''Игра начинается😁:
 		Ваше слово состоит из ''' + str(len(user_data[2])) + ''' букв,
 		Слово: ''' + str(user_data[3]) + '''
 		Ваша буква:'''
 		return message
-
+	# основной цикл игры
 	def game(self, user_id, message):
 		
 		if message in self.alphabet:
@@ -290,7 +301,7 @@ class bot:
 			error = int(user_data[6])
 			message = message.lower()
 			if message in letter:
-				return 'Вы уже вводили эту букву!'
+				return 'Вы уже вводили эту букву!🤔'
 			else:
 				if message in word:
 					letter += message
@@ -313,7 +324,7 @@ class bot:
 				right_letter = ''
 				letter = ''
 				error = 0
-				answer = 'Вы победили! Для повторной игры напишите "Виселица"'
+				answer = 'Вы победили😃😃! Для повторной игры напишите "Виселица"'
 				self.sql_update(user_id, word, blank, right_letter, letter, error)
 				self.sql_update_mode(user_id, 0)
 			if error > len(config.vis) - 2:
@@ -323,7 +334,7 @@ class bot:
 				right_letter = ''
 				letter = ''
 				error = 0
-				answer =  '''Вы проиграли! 
+				answer =  '''Вы проиграли😢! 
 				Слово было: ''' + word
 				word = ''
 				self.sql_update(user_id, word, blank, right_letter, letter, error)
@@ -341,12 +352,38 @@ class bot:
 			self.sql_update_mode(user_id, 0)
 			return '''Игра окончена!
 			Ваше слово было: ''' + user_data[2]
+
 		else:
-			return 'Вы ввели не букву! Если хотите выйти напишите: "Меню"'
+			user_data = self.sql_select_user(user_id)
+			word = user_data[2]
+			blank = user_data[3]
+			right_letter = user_data[4]
+			letter = user_data[5]
+			error = int(user_data[6])
+			if len(message) == len(word):
+				if message.upper() == word.upper():
+					word = ''
+					blank = ''
+					right_letter = ''
+					letter = ''
+					error = 0
+					answer = 'Вы победили! Для повторной игры напишите "Виселица"'
+					self.sql_update(user_id, word, blank, right_letter, letter, error)
+					self.sql_update_mode(user_id, 0)
+					return answer
+				else:
+					error += 1
+					
+					self.sql_update(user_id, word, blank, right_letter, letter, error)
+					answer = '''Вы не угадали😢 '''+ '''
+					         слово:''' + blank +''' 
+					         ''' + config.vis[len(config.vis) - 1 - error]
+			else:		
+				return 'Вы ввели не букву! Если хотите выйти напишите: "Меню"'
 	
 		
 		return answer
-
+	# Отделение html тегов от имени
 	def clear_tags_for_str(self, line):
 		not_skip = True
 		result = ''
@@ -361,7 +398,7 @@ class bot:
 				if i == ">":
 					not_skip = True
 		return(result)
-
+	# Парсинг города пользователя вк
 	def get_user_city(self, user_id):
 		try:
 			request = requests.get('https://vk.com/id' + str(user_id))
@@ -372,7 +409,7 @@ class bot:
 			return city[1]
 		except:
 			return 'error'
-
+	# Получение погоды в городе
 	def getWeather(self, place):
 		try:
 			owm = pyowm.OWM(config.OWM_TOKEN, language = 'ru')
@@ -428,7 +465,7 @@ class bot:
 			return weather
 		except:
 			return 'Произошла ошибка или у вас скрыт город. Пожалуйста для уточнения города напишите "Погода город"(город напишите в иминительном подеже)"!'
-	
+	# Получение статистики ковида
 	def get_covid_statistic(self):
 		request = requests.get('https://стопкоронавирус.рф')
 		bs = bs4.BeautifulSoup(request.text, "html.parser")
