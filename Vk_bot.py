@@ -446,7 +446,7 @@ class bot:
 		death = line3[0]
 		line4 = line[14].split('<')
 		vizdorovelo = line4[0]
-		return f"Статистика в России. Выявлено заболевших: {vsegocabolevchih}, из них за сутки: {zaden}, смертей: {death}, выздоровило: {vizdorovelo}."
+		return f"Статистика в России. Выявлено заболевших: {vsegocabolevchih}, из них за сутки: {zaden}, смертей: {death}, выздоровело: {vizdorovelo}."
 
 
 
