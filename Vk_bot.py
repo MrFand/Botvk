@@ -47,15 +47,20 @@ class bot:
 	# Создаём клавиатуру
 	def keyboard(self, user_id):
 		# Клавиатура режима меню
+
 		if self.get_mode(user_id) == 0:
-			keyboard = VkKeyboard(one_time=True)
+			keyboard = VkKeyboard(one_time=False)
 			keyboard.add_button('Погода', color=VkKeyboardColor.POSITIVE)
-			keyboard.add_button('Статистика', color=VkKeyboardColor.POSITIVE)
+			keyboard.add_button('Статистика COVID-19🦠', color=VkKeyboardColor.POSITIVE)
 			keyboard.add_line()
-			keyboard.add_button('Виселица', color=VkKeyboardColor.NEGATIVE)
+			keyboard.add_button('Виселица', color=VkKeyboardColor.POSITIVE)
+			keyboard.add_line() 
+			keyboard.add_button('<', color = VkKeyboardColor.NEGATIVE)
+			keyboard.add_button('1/2', color = VkKeyboardColor.SECONDARY)
+			keyboard.add_button('>', color = VkKeyboardColor.POSITIVE)
 		# Клавиатура режима игры виселица
-		if self.get_mode(user_id) == 1:
-			keyboard = VkKeyboard(one_time=True)
+		elif self.get_mode(user_id) == 1:
+			keyboard = VkKeyboard(one_time=False)
 			keyboard.add_button('А', color=self.Get_color('А', user_id))
 			keyboard.add_button('Б', color=self.Get_color('Б', user_id))
 			keyboard.add_button('В', color=self.Get_color('В', user_id))
@@ -99,31 +104,43 @@ class bot:
 			keyboard.add_button('Как играть?', color = VkKeyboardColor.POSITIVE)
 			keyboard.add_line()
 			keyboard.add_button('Меню', color=VkKeyboardColor.NEGATIVE)
+		elif self.get_mode(user_id) == 2:
 
+			keyboard = VkKeyboard(one_time=False)
+			keyboard.add_button('Игровая статистика🕹', color= VkKeyboardColor.POSITIVE)
+			keyboard.add_line()
+			keyboard.add_button('<', color = VkKeyboardColor.POSITIVE)
+			keyboard.add_button('2/2', color= VkKeyboardColor.SECONDARY)
+			keyboard.add_button('>', color= VkKeyboardColor.NEGATIVE)
+		else:
+			keyboard = VkKeyboard(one_time = True)
+			keyboard.add_button('keyboard ERROR', color = VkKeyboardColor.NEGATIVE)
 		# сборка и возвращение клавиатуры
 		keyboard = keyboard.get_keyboard()
 		return keyboard
 	# Создание бд
 	def sql_connection(self):
+		
 		try:
-
-			connection = sqlite3.connect('Database.db')
+			connection = sqlite3.connect('Database2.db')
 			cursorObj = connection.cursor()
-			try:
-				cursorObj.execute('CREATE TABLE employees(user_id integer PRIMARY KEY, \
+			try:	
+				cursorObj.execute('CREATE TABLE IF NOT EXISTS employees(user_id integer PRIMARY KEY, \
 				mode integer, \
 				word text,\
 				blank text,\
 				right_letter text,\
 				letter text,\
-				error integer)')
+				error integer,\
+				wins integer,\
+				lose integer)' )
 			except:
 				print('Base already')
-			print("Connection is established: Database is created in memory")
+				print("Connection is established: Database is created in memory")
 			return connection
+		
 		except:
-
-		    print('Error')
+			print('Error')
 	# Получение режима пользователея из бд
 	def get_mode(self, user_id):
 		user_data = self.sql_select_user(user_id)
@@ -133,18 +150,19 @@ class bot:
 		return user_data[1]
 	# Регистрация нового пользователя
 	def sql_new_user(self, user_id):
+		
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
-		data = (user_id, 0, '', '', '','', 0)
-		cursorObj.execute('INSERT OR IGNORE INTO employees(user_id, mode, word, blank, right_letter,letter, error)\
-			VALUES(?, ?, ?, ?, ?, ?, ?)', data)
+		data = (user_id, 0, '', '', '','', 0, 0, 0)
+		cursorObj.execute('INSERT OR IGNORE INTO employees(user_id, mode, word, blank, right_letter,letter, error, wins, lose)\
+			VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
 		connection.commit()
 		connection.close()
 	# Выборка данных пользователя из бд
 	def sql_select_user(self, user_id):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
-		cursorObj.execute('SELECT user_id,mode,word,blank,right_letter,letter, error FROM employees')
+		cursorObj.execute('SELECT user_id,mode,word,blank,right_letter,letter, error, wins, lose FROM employees')
 		rows = cursorObj.fetchall()
 		data = 'NULL'
 		for row in rows:
@@ -197,7 +215,7 @@ class bot:
 		connection.commit()
 		connection.close()
 	# Обновления данных пользователя в  бд
-	def sql_update(self, user_id, word, blank, right_letter, letter, error):
+	def sql_update(self, user_id, word, blank, right_letter, letter, error, wins, lose):
 		connection = self.sql_connection()
 		cursorObj = connection.cursor()
 		data = (word, user_id)
@@ -214,6 +232,12 @@ class bot:
 		connection.commit()
 		data = (error, user_id)
 		cursorObj.execute('UPDATE employees SET error = ? WHERE user_id = ?', data)
+		connection.commit()
+		data = (wins, user_id)
+		cursorObj.execute('UPDATE employees SET wins = ? WHERE user_id = ?', data)
+		connection.commit()
+		data = (lose, user_id)
+		cursorObj.execute('UPDATE employees SET lose = ? WHERE user_id = ?', data)
 		connection.commit()
 		print('1')
 		connection.close()
@@ -257,7 +281,7 @@ class bot:
 				return f"Прощай, {self.USERNAME} ("
 			elif message.upper() == self.COMMANDS[4].upper():
 				return 'Вот мои команды:\n "Погода": показывает погоду в вашем городе,\n "Статистика": Выводит статистику заболеваемости короновируса в РФ,\n "Виселица": Мини-игра угадай слово.'
-			elif message.upper() == self.COMMANDS[5].upper():
+			elif message.upper() == self.COMMANDS[5].upper() or message == 'Статистика COVID-19🦠':
 				return self.get_covid_statistic()
 			elif message.upper() == self.COMMANDS[6].upper():
 				# return f"Привет, {self.USERNAME}! Чтобы узнать что я могу напиши 'команды'"
@@ -270,10 +294,28 @@ class bot:
 				self.sql_update_mode(self.USER_ID, 1)
 				self.sql_update_word(self.USER_ID)
 				return self.start_game(self.USER_ID)
+			elif message == '<' or message == '1/2':
+				return 'Меню №1'
+			elif message == '>':
+				self.sql_update_mode(self.USER_ID, 2)
+				return 'Меню №2'
 			else:
 				return 'Я не знаю такой команды. Чтобы узнать мои способности напиши "команды"!'
-		else:
+		elif user_data[1] == 1:
 			return self.game(self.USER_ID, message)
+		elif user_data[1] == 2:
+			# Режим дополнительного меню
+			if message == '<':
+				self.sql_update_mode(self.USER_ID, 0)
+				return 'Меню №1'
+			elif message == '>' or message == '2/2':
+				return 'Меню №2'
+			elif message == 'Игровая статистика🕹':
+				user_data = self.sql_select_user(self.USER_ID)
+				name = self.get_name_from_vk(self.USER_ID)
+				answer = '''Статистика пользователя ''' + name['name'] + ':\nПобед: '+ str(user_data[7]) + '\n Поражений: ' + str(user_data[8])
+				return answer
+		
 	# Замена * на правильные буквы
 	def blank(self, word, right_letter, blank):
 		for i in range(len(word)):
@@ -301,6 +343,8 @@ class bot:
 			right_letter = user_data[4]
 			letter = user_data[5]
 			error = int(user_data[6])
+			wins = int(user_data[7])
+			lose = int(user_data[8])
 			message = message.lower()
 			if message in letter:
 				return 'Вы уже вводили эту букву!🤔'
@@ -309,14 +353,14 @@ class bot:
 					letter += message
 					right_letter += message
 					blank = self.blank(word, right_letter, blank)
-					self.sql_update(user_id, word, blank, right_letter, letter, error)
+					self.sql_update(user_id, word, blank, right_letter, letter, error, wins, lose)
 					answer = '''Буква ''' + message + ''' есть в слове!
 					Слово: ''' + blank + ''' 
 					''' + config.vis[len(config.vis) - 1 - error]
 				else:
 					error += 1
 					letter += message
-					self.sql_update(user_id, word, blank, right_letter, letter, error)
+					self.sql_update(user_id, word, blank, right_letter, letter, error, wins, lose)
 					answer = '''Буквы ''' + message + ''' нет в слове!
 					слово:''' + blank +''' 
 					''' + config.vis[len(config.vis) - 1 - error]
@@ -326,9 +370,10 @@ class bot:
 				right_letter = ''
 				letter = ''
 				error = 0
+				wins += 1
 				answer = '''Вы победили😃😃! 
 				Для повторной игры напишите "Виселица"'''
-				self.sql_update(user_id, word, blank, right_letter, letter, error)
+				self.sql_update(user_id, word, blank, right_letter, letter, error, wins, lose)
 				self.sql_update_mode(user_id, 0)
 			if error > len(config.vis) - 2:
 					
@@ -337,10 +382,11 @@ class bot:
 				right_letter = ''
 				letter = ''
 				error = 0
+				lose += 1
 				answer =  '''Вы проиграли😢! 
 				Слово было: ''' + word
 				word = ''
-				self.sql_update(user_id, word, blank, right_letter, letter, error)
+				self.sql_update(user_id, word, blank, right_letter, letter, error, wins, lose)
 				self.sql_update_mode(user_id, 0)
 			
 		elif message.upper() == 'КАК ИГРАТЬ?':
@@ -354,7 +400,9 @@ class bot:
 			right_letter = ''
 			letter = ''
 			error = 0
-			self.sql_update(user_id, word, blank, right_letter, letter, error)
+			lose = int(user_data[8]) + 1
+			wins = int(user_data[7])
+			self.sql_update(user_id, word, blank, right_letter, letter, error, wins , lose)
 			self.sql_update_mode(user_id, 0)
 			return '''Игра окончена!
 			Ваше слово было: ''' + user_data[2]
@@ -366,6 +414,8 @@ class bot:
 			right_letter = user_data[4]
 			letter = user_data[5]
 			error = int(user_data[6])
+			wins = int(user_data[7])
+			lose = int(user_data[8])
 			if len(message) == len(word):
 				if message.upper() == word.upper():
 					word = ''
@@ -375,7 +425,8 @@ class bot:
 					error = 0
 					answer = '''Вы победили😃😃!
 					Для повторной игры напишите "Виселица"'''
-					self.sql_update(user_id, word, blank, right_letter, letter, error)
+					wins += 1
+					self.sql_update(user_id, word, blank, right_letter, letter, error, wins, lose)
 					self.sql_update_mode(user_id, 0)
 					return answer
 				else:
@@ -385,6 +436,17 @@ class bot:
 					answer = '''Вы не угадали😢 '''+ '''
 					         слово:''' + blank +''' 
 					         ''' + config.vis[len(config.vis) - 1 - error]
+					if error > len(config.vis) - 2:
+						blank = ''
+						right_letter = ''
+						letter = ''
+						error = 0
+						answer =  '''Вы проиграли😢! 
+						Слово было: ''' + word
+						word = ''
+						lose += 1
+						self.sql_update(user_id, word, blank, right_letter, letter, error,wins, lose)
+						self.sql_update_mode(user_id, 0)
 			else:		
 				return 'Вы ввели не букву или слово! Если хотите выйти напишите: "Меню"'
 	

@@ -17,12 +17,14 @@ for event in longpoll.listen():
 		text = event.obj.text
 		
 		lsvk.messages.send(
-				user_id = event.obj.from_id,
-				message = vkbot.new_message(text),
-				random_id = get_random_id(),
-				peer_id = event.obj.peer_id,
-				keyboard =  vkbot.keyboard(event.obj.from_id)
-				)
+					user_id = event.obj.from_id,
+					message = vkbot.new_message(text),
+					random_id = get_random_id(),
+					peer_id = event.obj.peer_id,
+					keyboard =  vkbot.keyboard(event.obj.from_id)
+					)
+		
 
+			
 		print('text:' + event.obj.text)
 
