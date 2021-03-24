@@ -15,15 +15,16 @@ for event in longpoll.listen():
 		print(f'For me by: {event.obj.from_id}')
 		vkbot = bot(event.obj.from_id)
 		text = event.obj.text
-		
-		lsvk.messages.send(
+		try:
+			lsvk.messages.send(
 					user_id = event.obj.from_id,
 					message = vkbot.new_message(text),
 					random_id = get_random_id(),
 					peer_id = event.obj.peer_id,
 					keyboard =  vkbot.keyboard(event.obj.from_id)
 					)
-		
+		except:
+			print('ERROR')
 
 			
 		print('text:' + event.obj.text)
